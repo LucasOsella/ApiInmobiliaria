@@ -6,6 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 using ApiInmobiliaria.Data;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
+using ApiInmobiliaria.Repository.IRepositorio;
 
 
 namespace ApiInmobiliaria.Controllers;
@@ -16,59 +17,87 @@ namespace ApiInmobiliaria.Controllers;
 public class InmueblesController : ControllerBase
 {
     private readonly ConexionBD _context;
+    private readonly IRepositorioInmueble _inmuebleRepositorio;
+    private readonly IRepositorioPropietario _propietarioRepositorio;
 
-    public InmueblesController(ConexionBD context)
+    public InmueblesController(ConexionBD context, IRepositorioInmueble inmuebleRepositorio, IRepositorioPropietario propietarioRepositorio)
     {
         _context = context;
+        _inmuebleRepositorio = inmuebleRepositorio;
+        _propietarioRepositorio = propietarioRepositorio;
+
     }
     [HttpGet]
     public IActionResult GetInmueble()
     {
-        var id_Propietario = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (id_Propietario == null)
+        var id_token = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var email = User.FindFirst(ClaimTypes.Email)?.Value;
+        Propietario propietario = _propietarioRepositorio.obtenerPorEmail(email);
+
+        if (id_token != propietario.Id.ToString())
         {
-            return Unauthorized("Propietario no identificado");
+            return Unauthorized("Propietario no autorizado para ver estos inmuebles.");
         }
 
-        var inmuebles = _context.inmueble.Where(i => i.Id_Propietario.ToString() == id_Propietario).ToList();
+        var inmuebles = _inmuebleRepositorio.ObtenerTodosPorPropietario(Convert.ToInt32(id_token));
         return Ok(inmuebles);
     }
 
-    [HttpPost("AgregarInmueble")]
-    public IActionResult AgregarInmueble([FromBody] Inmueble inmueble)
+    [HttpGet("ObtenerInmueblePorId/{id}")]
+    public IActionResult ObtenerInmueble(int id)
     {
-        inmueble.Id_Propietario = Convert.ToInt32(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-        _context.inmueble.Add(inmueble);
-        _context.SaveChanges();
-        return Ok("Inmueble agregado correctamente.");
-    }
+        var id_token = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var inmueble = _inmuebleRepositorio.ObtenerPorId(id);
 
-    [HttpPut("EditarEstadoInmueble/{id}")]
-        public IActionResult EditarEstadoInmueble(int id, [FromBody] Inmueble inmueble)
+        if (id_token != inmueble.Id_Propietario.ToString())
         {
-            var existingInmueble = _context.inmueble.Find(id);
-            if (existingInmueble == null)
-            {
-                return NotFound("Inmueble no encontrado");
-            }
-
-        // Actualizar solo el estado del inmueble
-            if (!string.IsNullOrWhiteSpace(inmueble.Estado))
-            {
-            existingInmueble.Estado = inmueble.Estado;
-            }
-            
-
-            _context.SaveChanges();
-            return Ok("Estado del inmueble actualizado correctamente.");
+            return Unauthorized("Propietario no autorizado para ver este inmueble.");
         }
 
+        return Ok(inmueble);
+    }
+
+    [HttpPut("Actualizar/{id}")]
+    public IActionResult Actualizar(int id,[FromBody] string Estado)
+    {
+
+        var id_token = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        var original = _inmuebleRepositorio.ObtenerPorId(id);
+
+        if (id_token != original.Id_Propietario.ToString())
+        {
+            return Unauthorized("Propietario no autorizado para actualizar este inmueble.");
+        }
+        if (Estado != "DISPONIBLE" && Estado != "SUSPENDIDO" && Estado != "OCUPADO")
+        {
+            return BadRequest("El Estado debe ser 'DISPONIBLE', 'SUSPENDIDO' o 'OCUPADO'");
+        }
+
+        original.Estado = Estado;
+
+        _inmuebleRepositorio.Actualizar(original);
+        return Ok("Inmueble agregado exitosamente.");
+    }
+
+    [HttpPost("Crear")]
+    public IActionResult Crear([FromBody] Inmueble inmueble, IFormFile imagen)
+    {
+        var id_token = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (id_token != inmueble.Id_Propietario.ToString())
+        {
+            return Unauthorized("Propietario no autorizado para crear este inmueble.");
+        }
+
+        _inmuebleRepositorio.Create(inmueble);
+        return Ok("Inmueble agregado exitosamente.");
+    }
 
     
 
     //endpoint para hashear las contraseñas existentes que estaban en texto plano, no usar en producción
-    [Authorize(Roles = "Admin")]
-    [HttpPost("hashPasswords")]
+    /*[HttpPost("hashPasswords")]
     public IActionResult HashExistingPasswords()
     {
         var propietarios = _context.propietarios.ToList();
@@ -86,5 +115,6 @@ public class InmueblesController : ControllerBase
 
         return Ok("Contraseñas actualizadas correctamente.");
     }
+    */
 
 }

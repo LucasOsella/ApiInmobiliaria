@@ -7,6 +7,7 @@ using ApiInmobiliaria.Data;
 using System.Security.Claims;
 using BCrypt.Net;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Identity;
 
 
 
@@ -36,24 +37,17 @@ public IActionResult Login([FromBody] LoginRequest model)
     }
 
     var propietario = _context.propietarios.FirstOrDefault(u => u.Email == model.Email);
-    if (propietario == null)
-    {
-        return Unauthorized("Usuario no encontrado");
-    }
-
+        if (propietario == null)
+        {
+            return Unauthorized("Usuario no encontrado");
+        }
     if (!BCrypt.Net.BCrypt.Verify(model.Password, propietario.Password))
     {
         return Unauthorized("Credenciales inválidas");
     }
 
     var token = GenerateToken(propietario);
-    return Ok(new
-    {
-        token,
-        propietario.Email,
-        propietario.Nombre,
-        propietario.Id
-    });
+        return Ok(token);
 }
 
 

@@ -4,6 +4,8 @@ using System.Text;
 using ApiInmobiliaria.Controllers;
 using ApiInmobiliaria.Data;
 using Microsoft.EntityFrameworkCore;
+using ApiInmobiliaria.Repository;
+using ApiInmobiliaria.Repository.IRepositorio;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -65,6 +67,11 @@ builder.Services.AddSwaggerGen(c =>
         new string[] {}
     }});
 });
+// Construcción de la aplicación
+builder.Services.AddScoped<IRepositorioPropietario, PropietarioRepositorio>();
+builder.Services.AddScoped<IRepositorioInmueble, InmuebleRepositorio>();
+builder.Services.AddScoped<IRepositorioContratos, ContratoRespositorio>();
+builder.Services.AddScoped<IRepositorioPago, PagoRepositorio>();
 
 var app = builder.Build();
 
@@ -74,6 +81,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseStaticFiles();
 
 app.UseHttpsRedirection();
 

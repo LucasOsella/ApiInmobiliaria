@@ -16,11 +16,8 @@ namespace Tp_inmobiliaria.Models
         public int Id { get; set; }
         public string? Nombre_Usuario { get; set; }
         public string? Apellido_Usuario { get; set; }
-        [Required(ErrorMessage = "El email es requerido")]
         public string? Email { get; set; }
-        [Required(ErrorMessage = "La contraseña es requerida")]
         public string? Password { get; set; }
-        [Required(ErrorMessage = "El rol es requerido")]
         public int? Id_TipoUsuario { get; set; }
         public string? RolUsuario { get; set; }
         public int Activo { get; set; }

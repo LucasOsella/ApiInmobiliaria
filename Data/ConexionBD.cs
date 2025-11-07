@@ -20,7 +20,7 @@ namespace ApiInmobiliaria.Data
         // Tus tablas (DbSets)
         public DbSet<Inmueble> inmueble { get; set; }
         public DbSet<Inquilinos> inquilinos { get; set; }
-        public DbSet<Contratos> contratos { get; set; }
+        public DbSet<Contrato> contratos { get; set; }
         public DbSet<Propietario> propietarios { get; set; }
         public DbSet<Pago> pagos { get; set; }
     }

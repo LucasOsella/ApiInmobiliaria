@@ -1,18 +1,25 @@
-namespace ApiInmobiliaria.Models;
+
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
-public class Pago
+
+namespace ApiInmobiliaria.Models
 {
-    [Key]
-    public int id { get; set; }
-    public int id_contrato { get; set; }
-    public int numero_pago { get; set; }
-    public DateTime fecha_pago { get; set; }
-    public string? detalle { get; set; }
-    public decimal importe { get; set; }
-    public string estado { get; set; } = "ACTIVO"; // Valor por defecto
-    public int id_usuario_creador { get; set; }
-    public int? id_usuario_finalizador { get; set; }
+    [Table("pago")]
+    public class Pago
+    {
+        [Key]
+        public int id { get; set; }
+        public int id_contrato { get; set; }
+        public int numero_pago { get; set; }
+        public DateTime fecha_pago { get; set; }
+        public string? detalle { get; set; }
+        public decimal importe { get; set; }
+        public string estado { get; set; } = "ACTIVO"; // Valor por defecto
+        public int id_usuario_creador { get; set; }
+        public int? id_usuario_finalizador { get; set; }
 
-    // Propiedades adicionales para mostrar en la vista
+        // Propiedades adicionales para mostrar en la vista
+    }
+
 }

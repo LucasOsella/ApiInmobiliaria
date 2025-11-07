@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using ApiInmobiliaria.Models;
 using System.Security.Claims;
+using ApiInmobiliaria.Repository.IRepositorio;
 
 
 namespace ApiInmobiliaria.Controllers;
@@ -11,11 +12,13 @@ namespace ApiInmobiliaria.Controllers;
 [Route("api/[controller]")]
 public class PropietarioController : ControllerBase
 {
-
+    private readonly IRepositorioPropietario _repositorio;
     private readonly ConexionBD _context;
     private readonly IConfiguration _configuration;
-    public PropietarioController(ConexionBD context, IConfiguration configuration)
+
+    public PropietarioController(ConexionBD context, IConfiguration configuration, IRepositorioPropietario repositorio)
     {
+        _repositorio = repositorio;
         _context = context;
         _configuration = configuration;
     }
@@ -24,84 +27,70 @@ public class PropietarioController : ControllerBase
     public IActionResult GetPropietarios()
     {
         var id_Propietario = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (id_Propietario == null)
-        {
-            return Unauthorized("Propietario no identificado");
-        }
-        var propietarios = _context.propietarios.Where(p => p.Id.ToString() == id_Propietario).ToList();
-        return Ok(propietarios);
+        var propietario = _repositorio.ObtenerPorId(Convert.ToInt32(id_Propietario));
+        return Ok(propietario);
     }
 
-    [HttpPost("EditarPropietario")]
-    public IActionResult EditarPropietario([FromBody] Propietario propietario)
+    [Authorize]
+    [HttpPut("Actualizar")]
+    public IActionResult Actualizar([FromBody] Propietario propietario)
     {
-        var id_Propietario = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (id_Propietario == null || propietario.Id.ToString() != id_Propietario)
-        {
-            return Unauthorized("No autorizado para editar este propietario");
-        }
+        // Obtiene el ID del propietario autenticado
+        var id_token = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        var existingPropietario = _context.propietarios.Find(propietario.Id);
-        if (existingPropietario == null)
+        if (id_token != propietario.Id.ToString())
         {
-            return NotFound("Propietario no encontrado");
+            return Unauthorized("Propietario no autorizado para actualizar estos datos.");
         }
+    
+        // Obtiene el email del usuario autenticado (desde el token)
+        var email = User.FindFirst(ClaimTypes.Email)?.Value;
 
-        // Actualizar los campos
-        if (!string.IsNullOrWhiteSpace(propietario.Nombre))
-        {
-            existingPropietario.Nombre = propietario.Nombre;
-        }
-        if (!string.IsNullOrWhiteSpace(propietario.Apellido))
-        {
-            existingPropietario.Apellido = propietario.Apellido;
-        }
-        if (!string.IsNullOrWhiteSpace(propietario.Email))
-        {
-            existingPropietario.Email = propietario.Email;
-        }
-        if (!string.IsNullOrWhiteSpace(propietario.Direccion))
-        {
-            existingPropietario.Direccion = propietario.Direccion;
-        }
-        if (!string.IsNullOrWhiteSpace(propietario.Telefono))
-        {
-            existingPropietario.Telefono = propietario.Telefono;
-        }
-        
-        _context.SaveChanges();
-        return Ok("Propietario actualizado correctamente.");
+        // Busca los datos originales en la base de datos
+        var original = _repositorio.obtenerPorEmail(email);
+
+        // Si no lo encuentra, devuelve 404
+        if (original == null)
+            return NotFound();
+
+        // Mantiene el ID original (para no crear un nuevo propietario)
+        original.Dni = propietario.Dni;
+        original.Nombre = propietario.Nombre;
+        original.Apellido = propietario.Apellido;
+        original.Telefono = propietario.Telefono;
+        original.Email = propietario.Email;
+
+        // Llama al método del repositorio para actualizar los datos
+        _repositorio.Actualizar(original);
+
+        // Devuelve el objeto actualizado
+        return Ok(original);
     }
 
     [HttpPost("CambiarPassword")]
-    public IActionResult CambiarPassword([FromBody] CambiarPasswordRequest model)
+    public IActionResult CambiarPassword([FromForm] string newPassword, [FromForm] string oldPassword)
     {
-        if (string.IsNullOrWhiteSpace(model.NewPassword))
+        var email = User.FindFirst(ClaimTypes.Email)?.Value;
+        var id_token = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var propietario = _repositorio.obtenerPorEmail(email);
+        if (id_token != propietario.Id.ToString())
         {
-            return BadRequest("La nueva contraseña es obligatoria.");
-        }
-        if (model.NewPassword.Equals(model.OldPassword))
-        {
-            return BadRequest("Las contraseñas nos pueden ser iguales.");
-        }
-        var id_Propietario = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (id_Propietario == null)
-        {
-            return Unauthorized("Propietario no identificado");
+            return Unauthorized("Propietario no autorizado para cambiar esta contraseña.");
         }
 
-        var propietario = _context.propietarios.Find(id_Propietario);
-        if (propietario == null)
+        if (string.IsNullOrEmpty(newPassword) || string.IsNullOrEmpty(oldPassword))
         {
-            return NotFound("Propietario no encontrado");
+            return BadRequest("La nueva contraseña y la contraseña antigua son obligatorias.");
         }
-        if (BCrypt.Net.BCrypt.Verify(model.NewPassword, propietario.Password))//si la nueva contraseña es la misma que la antigua
+
+        var result = _repositorio.changerPassword(email, newPassword, oldPassword).Result;
+
+        if (!result)
         {
-            return BadRequest("No puede ingresar la misma contraseña");
+            return BadRequest("No se pudo cambiar la contraseña. Verifique la contraseña antigua.");
         }
-        propietario.Password = BCrypt.Net.BCrypt.HashPassword(model.NewPassword);
-        _context.SaveChanges();
-        return Ok("Contraseñas cambiadas correctamente.");
+
+        return Ok("Contraseña cambiada exitosamente.");
     }
 
 }
