@@ -10,17 +10,17 @@ namespace ApiInmobiliaria.Models
     public class Inmueble
     {   
         [Key]
-        public int Id { get; set; }
-        public string Direccion { get; set; } = "";
-        public int Ambientes { get; set; }
+        public int id { get; set; }
+        public string direccion { get; set; } = "";
+        public int ambientes { get; set; }
 
-        public string Coordenadas { get; set; } = "";
+        public string coordenadas { get; set; } = "";
 
-        public decimal Precio { get; set; }
+        public decimal precio { get; set; }
         public string Estado { get; set; } = "";
 
-        public int Id_Propietario { get; set; }
-        public int Id_Tipo { get; set; }
-       // public string ImagenUrl { get; set; } = "";
+        public int id_propietario { get; set; }
+        public int id_tipo { get; set; }
+        public string? ImagenUrl { get; set; } = "";
     }
 }

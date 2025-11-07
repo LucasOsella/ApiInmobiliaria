@@ -6,6 +6,7 @@ using ApiInmobiliaria.Data;
 using Microsoft.EntityFrameworkCore;
 using ApiInmobiliaria.Repository;
 using ApiInmobiliaria.Repository.IRepositorio;
+using Microsoft.CodeAnalysis.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 

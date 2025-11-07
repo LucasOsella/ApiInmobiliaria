@@ -241,3 +241,4 @@ C:\Users\Lucas\Desktop\Uni\.net\Tp_inmobiliaria\ApiInmobiliaria\bin\Debug\net9.0
 C:\Users\Lucas\Desktop\Uni\.net\Tp_inmobiliaria\ApiInmobiliaria\bin\Debug\net9.0\Swashbuckle.AspNetCore.SwaggerUI.dll
 C:\Users\Lucas\Desktop\Uni\.net\Tp_inmobiliaria\ApiInmobiliaria\bin\Debug\net9.0\BCrypt.Net-Next.dll
 C:\Users\Lucas\Desktop\Uni\.net\Tp_inmobiliaria\ApiInmobiliaria\obj\Debug\net9.0\ApiInmobiliaria.sourcelink.json
+C:\Users\Lucas\Desktop\Uni\.net\Tp_inmobiliaria\ApiInmobiliaria\bin\Debug\net9.0\ApiInmobiliaria.staticwebassets.runtime.json

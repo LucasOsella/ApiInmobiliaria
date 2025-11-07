@@ -16,10 +16,7 @@ namespace ApiInmobiliaria.Repository
         // Implementa aquí los métodos específicos para el repositorio de Inmueble
         public void Actualizar(Inmueble inmueble)
         {
-            /* _context.inmueble.Update(inmueble);
-            _context.SaveChanges();
-             */
-            var original = _context.inmueble.FirstOrDefault(i => i.Id == inmueble.Id);
+            var original = _context.inmueble.FirstOrDefault(i => i.id == inmueble.id);
             if (original != null)
             {
                 original.Estado = inmueble.Estado;
@@ -31,13 +28,13 @@ namespace ApiInmobiliaria.Repository
 
         public Inmueble? ObtenerPorId(int id)
         {
-            return _context.inmueble.FirstOrDefault(i => i.Id == id);
+            return _context.inmueble.FirstOrDefault(i => i.id == id);
 
         }
 
         public List<Inmueble> ObtenerTodosPorPropietario(int id)
         {
-            return _context.inmueble.Where(i => i.Id_Propietario == id).ToList();
+            return _context.inmueble.Where(i => i.id_propietario == id).ToList();
         }
         public void Create(Inmueble inmueble)
         {

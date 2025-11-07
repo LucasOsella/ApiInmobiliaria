@@ -49,7 +49,7 @@ public class InmueblesController : ControllerBase
         var id_token = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         var inmueble = _inmuebleRepositorio.ObtenerPorId(id);
 
-        if (id_token != inmueble.Id_Propietario.ToString())
+        if (id_token != inmueble.id_propietario.ToString())
         {
             return Unauthorized("Propietario no autorizado para ver este inmueble.");
         }
@@ -65,7 +65,7 @@ public class InmueblesController : ControllerBase
 
         var original = _inmuebleRepositorio.ObtenerPorId(id);
 
-        if (id_token != original.Id_Propietario.ToString())
+        if (id_token != original.id_propietario.ToString())
         {
             return Unauthorized("Propietario no autorizado para actualizar este inmueble.");
         }
@@ -80,20 +80,63 @@ public class InmueblesController : ControllerBase
         return Ok("Inmueble agregado exitosamente.");
     }
 
+    // POST: /api/Inmuebles/cargar
     [HttpPost("Crear")]
-    public IActionResult Crear([FromBody] Inmueble inmueble, IFormFile imagen)
-    {
-        var id_token = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-        if (id_token != inmueble.Id_Propietario.ToString())
+        public IActionResult Create([FromForm] string inmueble,[FromForm] IFormFile? imagen)
         {
-            return Unauthorized("Propietario no autorizado para crear este inmueble.");
+            try
+            {
+                var inmuebleData = System.Text.Json.JsonSerializer.Deserialize<Inmueble>(inmueble);//conviere la cadena json a objeto inmueble
+            var idPropClaim = User.FindFirst(ClaimTypes.NameIdentifier);//busca el claim con el id del propietario
+            Console.WriteLine("JSON recibido: " + inmueble);
+            if (inmuebleData == null)
+                return BadRequest("Datos de inmueble inválidos.");
+            if(inmuebleData.id_tipo <= 0)
+                return BadRequest("El tipo de inmueble es obligatorio.");        
+                if (idPropClaim == null)
+                    return Unauthorized("Token inválido o no proporcionado");
+                int idPropietario = int.Parse(idPropClaim.Value);//convierte el id del propietario a entero
+                inmuebleData.id_propietario = idPropietario;//asigna el id del propietario al inmueble
+
+            
+                if (imagen != null && imagen.Length > 0)//si se envio una imagen
+                {
+
+                    string uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");//ruta fisica para guardar la imagen
+                    if (!Directory.Exists(uploadsFolder))//si no existe la carpeta uploads, la crea
+                        Directory.CreateDirectory(uploadsFolder);
+
+                    string fileName = Guid.NewGuid().ToString() + Path.GetExtension(imagen.FileName);//genera un nombre unico para la imagen
+                    string filePath = Path.Combine(uploadsFolder, fileName);//ruta completa del archivo
+
+                    FileInfo fileInfo = new FileInfo(filePath);//informacion del archivo
+                    if (fileInfo.Exists)
+                    {
+                        fileInfo.Delete();
+                    }
+                    using (var fileStream = new FileStream(filePath, FileMode.Create))//guarda la imagen en el servidor
+                    {
+                        imagen.CopyTo(fileStream);
+                    }
+                    var baseUrl = $"{Request.Scheme}://{Request.Host.Value}{Request.PathBase.Value}";//obtiene la url base del servidor
+
+                    inmuebleData.ImagenUrl = $"{baseUrl}/uploads/{fileName}";
+                    inmuebleData.ImagenUrl = filePath;
+                }
+                else
+                {
+                    inmuebleData.ImagenUrl = "https://placehold.co/600x400";
+                }
+
+                _inmuebleRepositorio.Create(inmuebleData);
+                
+                return Ok("Inmueble agregado exitosamente.");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.InnerException?.Message ?? ex.Message);
+            }
         }
-
-        _inmuebleRepositorio.Create(inmueble);
-        return Ok("Inmueble agregado exitosamente.");
-    }
-
     
 
     //endpoint para hashear las contraseñas existentes que estaban en texto plano, no usar en producción
