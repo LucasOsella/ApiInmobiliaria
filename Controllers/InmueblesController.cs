@@ -74,7 +74,7 @@ public class InmueblesController : ControllerBase
             return BadRequest("El Estado debe ser 'DISPONIBLE', 'SUSPENDIDO' o 'OCUPADO'");
         }
 
-        original.Estado = Estado;
+        original.estado = Estado;
 
         _inmuebleRepositorio.Actualizar(original);
         return Ok("Inmueble agregado exitosamente.");
@@ -86,7 +86,7 @@ public class InmueblesController : ControllerBase
         {
             try
             {
-                var inmuebleData = System.Text.Json.JsonSerializer.Deserialize<Inmueble>(inmueble);//conviere la cadena json a objeto inmueble
+            var inmuebleData = System.Text.Json.JsonSerializer.Deserialize<Inmueble>(inmueble);//conviere la cadena json a objeto inmueble
             var idPropClaim = User.FindFirst(ClaimTypes.NameIdentifier);//busca el claim con el id del propietario
             Console.WriteLine("JSON recibido: " + inmueble);
             if (inmuebleData == null)
@@ -97,7 +97,7 @@ public class InmueblesController : ControllerBase
                     return Unauthorized("Token inválido o no proporcionado");
                 int idPropietario = int.Parse(idPropClaim.Value);//convierte el id del propietario a entero
                 inmuebleData.id_propietario = idPropietario;//asigna el id del propietario al inmueble
-
+                inmuebleData.estado = "SUSPENDIDO";//asigna el estado por defecto DISPONIBLE
             
                 if (imagen != null && imagen.Length > 0)//si se envio una imagen
                 {

@@ -17,7 +17,7 @@ namespace ApiInmobiliaria.Models
         public string coordenadas { get; set; } = "";
 
         public decimal precio { get; set; }
-        public string Estado { get; set; } = "";
+        public string estado { get; set; } = "";
 
         public int id_propietario { get; set; }
         public int id_tipo { get; set; }

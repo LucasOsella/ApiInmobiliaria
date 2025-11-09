@@ -19,7 +19,7 @@ namespace ApiInmobiliaria.Repository
             var original = _context.inmueble.FirstOrDefault(i => i.id == inmueble.id);
             if (original != null)
             {
-                original.Estado = inmueble.Estado;
+                original.estado = inmueble.estado;
                 _context.SaveChanges();
             }
 
